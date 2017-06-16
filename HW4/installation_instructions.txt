@@ -1,0 +1,22 @@
+For using Open AI gym on nove, you'll need to set up a virtual environment.
+To do so, open the terminal and click the following commands:
+
+virtualenv gym
+
+source gym/bin/activate.csh
+
+pip install tensorflow
+
+pip install gym
+
+git clone https://github.com/pybox2d/pybox2d
+
+cd pybox2d
+
+python setup.py build
+
+python setup.py install
+
+Once you typed these commands you can easily access your virtualenv by typing "source gym/bin/activate.csh"
+Pro tip: If you don't want to waste disk space, you can have only one partner to install the virtualenv, and the other will access it by typing "~johndoe/gym/bin/activate.csh"
+
