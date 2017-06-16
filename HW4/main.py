@@ -3,7 +3,7 @@
 """
 Created on Mon May 15 23:11:02 2017
 
-@author: daniel
+@author:
 """
 import gym
 import numpy as np
