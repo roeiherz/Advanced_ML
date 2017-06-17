@@ -69,7 +69,7 @@ if __name__ == '__main__':
             obsrv, reward, done, info = env.step(action)
 
             print ("observ: {}", obsrv)
-            print ("reward: {}", reward)
+            print ("reward: {}`", reward)
 
             if done:
                 print("Done")
