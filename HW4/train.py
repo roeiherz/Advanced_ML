@@ -42,7 +42,7 @@ if __name__ == '__main__':
     reward_lst = []
 
     # Define Summaries
-    summary_writer = tf.summary.FileWriter('logs/')
+    summary_writer = tf.summary.FileWriter('logs/', graph=tf.get_default_graph())
     summaries = tf.summary.merge_all()
 
     with tf.Session() as sess:
@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
             if done:
                 episode_number += 1
-                loss_val, _, summary_val = sess.run([loss, gradient_step.summaries],
+                loss_val, _, summary_val = sess.run([loss, gradient_step, summaries],
                                                     feed_dict={action_ph: action_lst, reward_ph: reward_lst,
                                                                observation_ph: observation_lst})
                 # Add summary

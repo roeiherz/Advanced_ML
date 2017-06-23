@@ -37,7 +37,7 @@ def loss(observation, actions, rewards):
     chosen_actions = tf.multiply(one_hot_vector, observation)
     # Sum the actions
     chosen_actions_sum = tf.reduce_sum(chosen_actions, axis=1)
-    tf.summary.tensor_summary("chosen_actions_sum", chosen_actions_sum)
+    tf.summary.histogram("chosen_actions_sum", chosen_actions_sum)
     # Compute the left factor loss
     left_factor_loss = tf.log(chosen_actions_sum)
 
@@ -46,6 +46,7 @@ def loss(observation, actions, rewards):
 
     # Compute the total loss
     loss = - tf.reduce_sum(tf.multiply(left_factor_loss, right_factor_loss))
+    tf.summary.scalar("loss", loss)
     # Compute gradients
     gradient_step = optimize(loss)
 
