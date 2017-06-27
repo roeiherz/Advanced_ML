@@ -1,14 +1,12 @@
 import tensorflow as tf
 import numpy as np
 
-__author__ = 'roeih'
-
 # Define layers size
 INPUT_SIZE = 8
-H1_SIZE = 15
-H2_SIZE = 15
+H1_SIZE = 30
+H2_SIZE = 30
 OUPUT_SIZE = 4
-LR = 1e-3
+LR = 0.001
 
 
 def optimize(loss):
@@ -17,16 +15,20 @@ def optimize(loss):
     :param loss: the loss
     :return: the gradient
     """
+    global_step = tf.Variable(0, trainable=False)
+    starter_learning_rate = LR
+    learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step,
+                                               1000, 0.5, staircase=True)
     opt = tf.train.AdamOptimizer(learning_rate=LR)
-    grad = opt.compute_gradients(loss)
+    grad = opt.minimize(loss)
     return grad
 
 
-def loss(observation, actions, rewards):
+def loss(actions_prob, actions, rewards):
     """
     This function calculates the loss
     :param actions: list of chosen actions
-    :param observation: the new measurement from the environment - first layer of the network (array size of 8)
+    :param actions_prob: the new measurement from the environment - first layer of the network (array size of 8)
     :param rewards: list of rewards
     :return:
     """
@@ -34,18 +36,18 @@ def loss(observation, actions, rewards):
     # Create one hot vector [NOF actions, 4]
     one_hot_vector = tf.one_hot(actions, OUPUT_SIZE)
     # Pick the chosen actions
-    chosen_actions = tf.multiply(one_hot_vector, observation)
+    chosen_actions = tf.multiply(one_hot_vector, actions_prob)
     # Sum the actions
     chosen_actions_sum = tf.reduce_sum(chosen_actions, axis=1)
-    tf.summary.histogram("chosen_actions_sum", chosen_actions_sum)
+
     # Compute the left factor loss
     left_factor_loss = tf.log(chosen_actions_sum)
 
     # Compute the right factor loss
-    right_factor_loss = tf.reduce_sum(rewards)
+    # right_factor_loss = tf.reduce_sum(rewards)
 
     # Compute the total loss
-    loss = - tf.reduce_sum(tf.multiply(left_factor_loss, right_factor_loss))
+    loss = - tf.reduce_sum(tf.multiply(left_factor_loss, rewards))
     tf.summary.scalar("loss", loss)
     # Compute gradients
     gradient_step = optimize(loss)
