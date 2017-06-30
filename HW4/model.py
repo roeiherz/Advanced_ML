@@ -17,6 +17,8 @@ def optimize(loss):
     """
     global_step = tf.Variable(0, trainable=False)
     starter_learning_rate = LR
+
+    # TBD - consider to use
     learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step,
                                                1000, 0.5, staircase=True)
     opt = tf.train.AdamOptimizer(learning_rate=LR)
@@ -42,9 +44,6 @@ def loss(actions_prob, actions, rewards):
 
     # Compute the left factor loss
     left_factor_loss = tf.log(chosen_actions_sum)
-
-    # Compute the right factor loss
-    # right_factor_loss = tf.reduce_sum(rewards)
 
     # Compute the total loss
     loss = - tf.reduce_sum(tf.multiply(left_factor_loss, rewards))
