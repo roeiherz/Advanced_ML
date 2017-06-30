@@ -16,12 +16,10 @@ def optimize(loss):
     :return: the gradient
     """
     global_step = tf.Variable(0, trainable=False)
-    starter_learning_rate = LR
-
     # TBD - consider to use
-    learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step,
+    learning_rate = tf.train.exponential_decay(LR, global_step,
                                                1000, 0.5, staircase=True)
-    opt = tf.train.AdamOptimizer(learning_rate=LR)
+    opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
     grad = opt.minimize(loss)
     return grad
 
