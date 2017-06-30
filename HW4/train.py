@@ -9,7 +9,8 @@ import os
 from model import build_model, loss, OUPUT_SIZE
 
 # discount factor of theb rewards
-SAVE_MODEL_NAME = "model_lr_start.ckpt"
+NOF_BATCHES_PER_EPOCH = 20
+SAVE_MODEL_NAME = "model_lr_decay.ckpt"
 LOAD_MODEL_NAME = "model_lr_decay.ckpt"
 GAMMA = 0.99
 # number of episodes per atch
@@ -17,7 +18,7 @@ BATCH_SIZE = 30
 # use saved model
 USE_SAVED_MODEL = True
 # number of steps in each episode (will be increased)
-SIZE = 50
+SIZE = 1000
 # total episodes
 TOTAL_EPISODES = 30000
 
@@ -137,11 +138,11 @@ if __name__ == '__main__':
             print("Episode: {0}, Loss: {1}".format(episode_number, loss_val))
 
             # increase number of allowed steps per episode
-            if episode_number % (20 * BATCH_SIZE) == 0:
+            if episode_number % (NOF_BATCHES_PER_EPOCH * BATCH_SIZE) == 0:
                 SIZE *= 2
 
             # save the model
-            if episode_number % (20 * BATCH_SIZE) == 0:
+            if episode_number % (NOF_BATCHES_PER_EPOCH * BATCH_SIZE) == 0:
                 # Save the variables to disk.
                 save_path = saver.save(sess, SAVE_MODEL_NAME)
                 print("Model saved in file: %s" % save_path)

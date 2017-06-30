@@ -2,11 +2,13 @@ import tensorflow as tf
 import numpy as np
 
 # Define layers size
+from HW4.train import NOF_BATCHES_PER_EPOCH
+
 INPUT_SIZE = 8
 H1_SIZE = 30
 H2_SIZE = 30
 OUPUT_SIZE = 4
-LR = 0.01
+LR = 0.005
 
 
 def optimize(loss):
@@ -17,8 +19,7 @@ def optimize(loss):
     """
     global_step = tf.Variable(0, trainable=False)
     # TBD - consider to use
-    learning_rate = tf.train.exponential_decay(LR, global_step,
-                                               1000, 0.5, staircase=True)
+    learning_rate = tf.train.exponential_decay(LR, global_step, NOF_BATCHES_PER_EPOCH, 0.5, staircase=True)
     opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
     grad = opt.minimize(loss)
     return grad
