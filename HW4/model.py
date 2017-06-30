@@ -6,7 +6,7 @@ INPUT_SIZE = 8
 H1_SIZE = 30
 H2_SIZE = 30
 OUPUT_SIZE = 4
-LR = 0.001
+LR = 0.01
 
 
 def optimize(loss):

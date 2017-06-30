@@ -13,7 +13,7 @@ GAMMA = 0.99
 # number of episodes per batch
 BATCH_SIZE = 30
 # use saved model
-USE_SAVED_MODEL = True
+USE_SAVED_MODEL = False
 
 
 def init_weights(shape):
@@ -90,7 +90,7 @@ if __name__ == '__main__':
                 observation_lst.append(obsrv)
 
                 obsrv, reward, done, info = env.step(action)
-                reward_lst.append(reward * np.power(GAMMA, len(reward_lst)))
+                reward_lst.append(reward)
                 action_lst.append(action)
 
                 # episode done ?
@@ -98,7 +98,13 @@ if __name__ == '__main__':
                     episode_number += 1
 
                     # discount and normalize
-                    rewards_episode_mat = np.asarray([np.sum(reward_lst[i:]) for i in range(len(reward_lst))])
+                    rewards_episode_mat = np.asarray(reward_lst)
+                    episode_avg_reward = np.mean(rewards_episode_mat)
+                    print "Episode {0} Avg reward {1}".format(episode_number, episode_avg_reward)
+
+                    for i in range(len(reward_lst)):
+                        rewards_episode_mat[i] = np.sum(rewards_episode_mat[i:] * np.power(GAMMA, np.arange(0, len(reward_lst) - i)))
+
                     rewards_episode_std = np.std(rewards_episode_mat)
                     rewards_episode_mat = (rewards_episode_mat - np.mean(rewards_episode_mat)) / rewards_episode_std
 
