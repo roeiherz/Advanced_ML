@@ -8,12 +8,18 @@ import os
 
 from model import build_model, loss, OUPUT_SIZE
 
-# discount factor of the rewards
+# discount factor of theb rewards
+SAVE_MODEL_NAME = "model_lr_start.ckpt"
+LOAD_MODEL_NAME = "model_lr_decay.ckpt"
 GAMMA = 0.99
-# number of episodes per batch
+# number of episodes per atch
 BATCH_SIZE = 30
 # use saved model
-USE_SAVED_MODEL = False
+USE_SAVED_MODEL = True
+# number of steps in each episode (will be increased)
+SIZE = 50
+# total episodes
+TOTAL_EPISODES = 30000
 
 
 def init_weights(shape):
@@ -40,7 +46,6 @@ if __name__ == '__main__':
     loss, gradient_step = loss(agent, action_ph, reward_ph)
 
     episode_number = 1
-    total_episodes = 30000
     # Initialize the Computational Graph
     init = tf.global_variables_initializer()
     # Add ops to save and restore all the variables.
@@ -55,23 +60,23 @@ if __name__ == '__main__':
     summary_writer = tf.summary.FileWriter('logs/', graph=tf.get_default_graph())
     summaries = tf.summary.merge_all()
 
+    # check the commutative rewards
+    cum_rwrd = 0.
+
     with tf.Session() as sess:
 
         # Restore variables from disk.
-        if os.path.exists("model.ckpt.index") and USE_SAVED_MODEL:
-            saver.restore(sess, "./model.ckpt")
+        if os.path.exists(LOAD_MODEL_NAME + ".index") and USE_SAVED_MODEL:
+            saver.restore(sess, "./" + LOAD_MODEL_NAME)
             print("Model restored.")
         else:
             sess.run(init)
 
         # Init gym environment
-        env.mode = 'human'
+        env.mode = 'fast'
         obsrv = env.reset()  # Obtain an initial observation of the environment
 
-        # number of steps in each episode (will be increased)
-        size = 1000
-
-        while episode_number <= total_episodes:
+        while episode_number <= TOTAL_EPISODES:
 
             # holds the normalized rewards of the all batch
             rewards_mat = np.zeros((0))
@@ -90,21 +95,27 @@ if __name__ == '__main__':
                 observation_lst.append(obsrv)
 
                 obsrv, reward, done, info = env.step(action)
+                cum_rwrd += reward
                 reward_lst.append(reward)
                 action_lst.append(action)
 
-                # episode done ?
-                if done or len(reward_lst) == size:
+                # episode done
+                if done or len(reward_lst) == SIZE:
                     episode_number += 1
 
                     # discount and normalize
                     rewards_episode_mat = np.asarray(reward_lst)
-                    episode_avg_reward = np.mean(rewards_episode_mat)
-                    print "Episode {0} Avg reward {1}".format(episode_number, episode_avg_reward)
+                    episode_avg_reward = np.sum(rewards_episode_mat)
+                    avg = cum_rwrd / (episode_number - 1)
+                    print "Episode {0} Sum Rewards: {1} Avg Rewards: {2}".format(episode_number, episode_avg_reward,
+                                                                                 avg)
 
+                    # Gamma Factor
                     for i in range(len(reward_lst)):
-                        rewards_episode_mat[i] = np.sum(rewards_episode_mat[i:] * np.power(GAMMA, np.arange(0, len(reward_lst) - i)))
+                        rewards_episode_mat[i] = np.sum(
+                            rewards_episode_mat[i:] * np.power(GAMMA, np.arange(0, len(reward_lst) - i)))
 
+                    # Normalize Gamma
                     rewards_episode_std = np.std(rewards_episode_mat)
                     rewards_episode_mat = (rewards_episode_mat - np.mean(rewards_episode_mat)) / rewards_episode_std
 
@@ -127,12 +138,12 @@ if __name__ == '__main__':
 
             # increase number of allowed steps per episode
             if episode_number % (20 * BATCH_SIZE) == 0:
-                size *= 2
+                SIZE *= 2
 
             # save the model
             if episode_number % (20 * BATCH_SIZE) == 0:
                 # Save the variables to disk.
-                save_path = saver.save(sess, "model.ckpt")
+                save_path = saver.save(sess, SAVE_MODEL_NAME)
                 print("Model saved in file: %s" % save_path)
 
                 # dump weights to pickle file (used by the tester)
