@@ -7,13 +7,15 @@ Created on Sat May 27 17:02:28 2017
 """
 import cPickle as pickle
 import numpy as np
-import tensorflow as tf
 import gym
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="-1"
+import tensorflow as tf
 
 envd = 'LunarLander-v2'
 env = gym.make(envd)
 
-fd = 'ws.p'
+fd = 'ws3870.p'
 f = open(fd)
 ws = pickle.load(f)
 D = 8

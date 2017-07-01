@@ -3,8 +3,9 @@
 import gym
 import numpy as np
 import cPickle
-import tensorflow as tf
 import os
+os.environ["CUDA_VISIBLE_DEVICES"]="-1"
+import tensorflow as tf
 
 from model import build_model, loss, OUPUT_SIZE
 
@@ -62,8 +63,11 @@ if __name__ == '__main__':
     summaries = tf.summary.merge_all()
 
     # check the commutative rewards
-    cum_rwrd = 0.
-
+    cum_rwrd = 0.0
+    batch_rwrd = 0.0
+    max_avg = 0.0
+    nof_batches_above_200 = 0
+    max_nof_batches_above_200 = 0
     with tf.Session() as sess:
 
         # Restore variables from disk.
@@ -90,13 +94,14 @@ if __name__ == '__main__':
                 # action = np.argmax(np.random.multinomial(1, action_probs.flatten()))
                 action = np.random.choice(np.arange(0, OUPUT_SIZE), p=np.squeeze(action_probs))
                 # Load the gui
-                env.render()
+                #env.render()
 
                 # Step the environment and get new measurements
                 observation_lst.append(obsrv)
 
                 obsrv, reward, done, info = env.step(action)
                 cum_rwrd += reward
+                batch_rwrd +=reward
                 reward_lst.append(reward)
                 action_lst.append(action)
 
@@ -125,7 +130,6 @@ if __name__ == '__main__':
 
                     # init per episode reward list
                     reward_lst = []
-
                     # start new episode
                     obsrv = env.reset()
 
@@ -135,14 +139,23 @@ if __name__ == '__main__':
                                                            observation_ph: observation_lst})
             # Add summary
             summary_writer.add_summary(summary_val, global_step=episode_number)
-            print("Episode: {0}, Loss: {1}".format(episode_number, loss_val))
+            batch_avg_reward = batch_rwrd / BATCH_SIZE
+            print("Episode: {0}, Loss: {1}, Avg Batch {2}".format(episode_number, loss_val, batch_avg_reward))
+
+            batch_rwrd = 0
 
             # increase number of allowed steps per episode
             if episode_number % (NOF_BATCHES_PER_EPOCH * BATCH_SIZE) == 0:
                 SIZE *= 2
 
+            if batch_avg_reward > 200:
+                nof_batches_above_200 += 1
+            else:
+                nof_batches_above_200 = 0
+
             # save the model
-            if episode_number % (NOF_BATCHES_PER_EPOCH * BATCH_SIZE) == 0:
+            if  nof_batches_above_200 > max_nof_batches_above_200:
+                max_nof_batches_above_200 = nof_batches_above_200
                 # Save the variables to disk.
                 save_path = saver.save(sess, SAVE_MODEL_NAME)
                 print("Model saved in file: %s" % save_path)
@@ -150,10 +163,12 @@ if __name__ == '__main__':
                 # dump weights to pickle file (used by the tester)
                 tvars = tf.trainable_variables()
                 param = sess.run(tvars)
-                filename = 'ws.p'
+                filename = "ws.p"
                 weights_file = open(filename, 'wb')
                 cPickle.dump(param, weights_file)
                 weights_file.close()
+
+                max_avg = avg
 
             # start new batch
             obsrv = env.reset()
